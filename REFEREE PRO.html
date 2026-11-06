@@ -1,0 +1,65 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>REFEREE PRO</title>
+<style>
+:root{--bg:#0a0d0b;--cd:#141a16;--ln:#26302a;--tx:#f4f7f5;--mu:#93a39a;--g:#1fbf5b;--gt:#06210f;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#eef3f0;--cd:#fff;--ln:#d3dcd6;--tx:#101712;--mu:#5b6a61;--gt:#fff;color-scheme:light}}
+:root[data-theme="dark"]{--bg:#0a0d0b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 "Segoe UI",Tahoma,Arial,sans-serif}
+#app{max-width:720px;margin:auto;padding:14px}
+.logo{font-weight:900;font-size:24px;text-align:center;margin:10px 0 18px}.logo i{color:var(--g);font-style:normal}
+.card{background:var(--cd);border:1px solid var(--ln);border-radius:10px;padding:12px;margin:10px 0}
+button,input{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--ln);border-radius:8px;padding:10px 12px;max-width:100%}
+button{cursor:pointer;background:var(--cd)}
+.btn{background:var(--g);color:var(--gt);border:0;font-weight:700;width:100%;padding:16px;font-size:18px;margin:6px 0}
+.sm{padding:6px 10px}.red{background:#e5202e;color:#fff;border:0}
+input{width:100%;margin:3px 0}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pl{display:flex;justify-content:space-between;align-items:center;gap:4px;border-bottom:1px solid var(--ln);padding:5px 0}
+.sc{text-align:center}.sc b{font-size:40px}#tm{font-size:34px;font-weight:800;color:var(--g);text-align:center;font-variant-numeric:tabular-nums}
+.ev{display:flex;justify-content:space-between;border-bottom:1px solid var(--ln);padding:6px 0}
+.mu{color:var(--mu)}
+#md{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;padding:12px}#md[hidden]{display:none}
+.mb{background:var(--cd);border:1px solid var(--ln);border-radius:12px;padding:16px;width:100%;max-width:380px}
+button:focus-visible,input:focus-visible{outline:2px solid var(--g)}
+@media(max-width:480px){.cols{grid-template-columns:1fr}}
+</style></head><body><div id="app"></div><div id="md" hidden></div>
+<script>
+const $=s=>document.querySelector(s);let U=Date.now();const uid=()=>++U;
+const e=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let S={ms:[],v:'home',cur:null,d:null};
+try{S.ms=JSON.parse(localStorage.getItem('rps')||'[]');S.ms.forEach(m=>{if(m.run&&m.ts)m.sec+=Math.floor((Date.now()-m.ts)/1000)})}catch(x){}
+const save=()=>{try{localStorage.setItem('rps',JSON.stringify(S.ms))}catch(x){}};
+const M=()=>S.ms.find(m=>m.id==S.cur);
+const sc=(m,i)=>m.ev.filter(x=>x.t=='g'&&x.team==i).length;
+const mm=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+const IC={g:'⚽ هدف',y:'🟨 صفراء',r:'🟥 حمراء'};
+function modal(h){$('#md').innerHTML='<div class="mb">'+h+'</div>';$('#md').hidden=false}
+function cf(msg,fn){modal(`<p>${msg}</p><button class="btn red" data-a="yes">تأكيد</button><button class="btn" style="background:var(--cd);color:var(--tx);border:1px solid var(--ln)" data-a="cl">إلغاء</button>`);S.yes=fn}
+function draft(){return{teams:[1,2].map(i=>({name:'',n:7,pl:[]}))}}
+function home(){return `<div class="logo">⚽ REFEREE <i>PRO</i></div><button class="btn" data-a="new">إنشاء مباراة جديدة</button><button class="btn" style="background:var(--cd);color:var(--tx);border:1px solid var(--ln)" data-a="hist">المباريات السابقة</button>`}
+function setup(){return `<div class="logo">مباراة جديدة</div><div class="cols">`+S.d.teams.map((t,i)=>`<div class="card"><b>الفريق ${i+1}</b><input data-p="${i}.name" placeholder="اسم الفريق" value="${e(t.name)}"><label class="mu">عدد اللاعبين<input type="number" min="1" max="30" data-c="${i}" value="${t.n}"></label>${Array.from({length:t.n},(_,k)=>`<input data-p="${i}.pl.${k}" placeholder="اسم اللاعب ${k+1}" value="${e(t.pl[k]||'')}">`).join('')}</div>`).join('')+`</div><button class="btn" data-a="go">بدء المباراة</button><button class="sm" data-a="home">رجوع</button>`}
+function live(){const m=M();return `<div class="card sc"><div class="cols" style="grid-template-columns:1fr auto 1fr;align-items:center"><b style="font-size:18px">${e(m.teams[0].name)}</b><b>${sc(m,0)} - ${sc(m,1)}</b><b style="font-size:18px">${e(m.teams[1].name)}</b></div><div id="tm">${mm(m.sec)}</div>
+<div>${m.done?'<span class="mu">انتهت المباراة</span>':`<button class="sm" data-a="run">${m.run?'⏸ إيقاف':'▶ تشغيل'}</button> <button class="sm" data-a="rst">↺ تصفير</button> <button class="sm red" data-a="end">إنهاء المباراة</button>`}</div></div>
+<div class="cols">${m.teams.map((t,i)=>`<div class="card"><b>${e(t.name)}</b>${t.pl.map((p,k)=>{const c=x=>m.ev.filter(y=>y.team==i&&y.p==k&&y.t==x).length;return `<div class="pl"><span>${e(p)} ${'⚽'.repeat(c('g'))}${'🟨'.repeat(c('y'))}${'🟥'.repeat(c('r'))}</span>${m.done?'':['g','y','r'].map(x=>`<button class="sm" data-a="ev" data-v="${x}|${i}|${k}">${IC[x].split(' ')[0]}</button>`).join('')}</div>`}).join('')}</div>`).join('')}</div>
+<div class="card"><b>سجل الأحداث</b>${m.ev.map(x=>`<div class="ev"><span>${x.min}’ ${IC[x.t]} - ${e(m.teams[x.team].pl[x.p])} (${e(m.teams[x.team].name)})</span><button class="sm" data-a="del" data-v="${x.id}">🗑</button></div>`).join('')||'<div class="mu">لا توجد أحداث بعد.</div>'}</div><button class="sm" data-a="home">🏠 الرئيسية</button>`}
+function hist(){return `<div class="logo">المباريات السابقة</div>`+(S.ms.map(m=>`<div class="card"><b>${e(m.teams[0].name)} ${sc(m,0)} - ${sc(m,1)} ${e(m.teams[1].name)}</b> <span class="mu">${m.done?'':'(جارية)'}</span><div style="margin-top:8px"><button class="sm" data-a="open" data-v="${m.id}">فتح</button> <button class="sm" data-a="dm" data-v="${m.id}">🗑 حذف</button></div></div>`).join('')||'<div class="mu">لا توجد مباريات بعد.</div>')+`<button class="sm" data-a="home">رجوع</button>`}
+function R(){$('#app').innerHTML=({home,setup,live,hist})[S.v]()}
+const A={
+home:()=>{S.v='home';R()},hist:()=>{S.v='hist';R()},
+new:()=>{S.d=draft();S.v='setup';R()},
+go:()=>{const d=S.d;const t=d.teams.map((x,i)=>({name:x.name.trim()||'الفريق '+(i+1),pl:Array.from({length:x.n},(_,k)=>x.pl[k]?.trim()||'لاعب '+(k+1))}));
+const m={id:uid(),teams:t,ev:[],sec:0,run:false,done:false};S.ms.unshift(m);S.cur=m.id;S.v='live';save();R()},
+open:el=>{S.cur=+el.dataset.v;S.v='live';R()},
+run:()=>{const m=M();m.run=!m.run;m.ts=Date.now();save();R()},
+rst:()=>cf('تصفير المؤقت؟',()=>{const m=M();m.sec=0;m.run=false;save();R()}),
+end:()=>cf('إنهاء المباراة؟ لا يمكن التراجع.',()=>{const m=M();m.done=true;m.run=false;save();R()}),
+ev:el=>{const[t,team,p]=el.dataset.v.split('|'),m=M();m.ev.push({id:uid(),t,team:+team,p:+p,min:Math.floor(m.sec/60)+1});save();R()},
+del:el=>cf('حذف هذا الحدث؟',()=>{const m=M();m.ev=m.ev.filter(x=>x.id!=el.dataset.v);save();R()}),
+dm:el=>cf('حذف هذه المباراة؟',()=>{S.ms=S.ms.filter(m=>m.id!=el.dataset.v);save();R()}),
+yes:()=>{$('#md').hidden=true;S.yes&&S.yes()},cl:()=>{$('#md').hidden=true}};
+document.addEventListener('click',ev=>{const el=ev.target.closest('[data-a]');if(el)A[el.dataset.a](el)});
+document.addEventListener('change',ev=>{const el=ev.target;if(el.dataset.c!=null){const t=S.d.teams[+el.dataset.c];t.n=Math.max(1,Math.min(30,+el.value||1));R();return}
+if(el.dataset.p){const k=el.dataset.p.split('.'),t=S.d.teams[+k[0]];if(k[1]=='name')t.name=el.value;else t.pl[+k[2]]=el.value}});
+setInterval(()=>{const m=S.cur&&M();if(!m||!m.run)return;m.sec++;m.ts=Date.now();if(m.sec%5==0)save();const t=$('#tm');if(t)t.textContent=mm(m.sec)},1000);
+R();
+</script></body></html>
